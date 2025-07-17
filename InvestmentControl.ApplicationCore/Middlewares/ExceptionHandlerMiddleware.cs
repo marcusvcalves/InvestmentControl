@@ -19,7 +19,7 @@ public class ExceptionHandlerMiddleware : IExceptionHandler
         _logger.LogError(ex, "An unhandled exception occurred while processing the request.");
 
         var apiErrorResponse = new ApiErrorResponse(HttpStatusCode.InternalServerError,
-            "An unexpected error occurred. Please try again later.");
+            "Internal server error.");
 
         httpContext.Response.StatusCode = (int)apiErrorResponse.HttpStatusCode;
 

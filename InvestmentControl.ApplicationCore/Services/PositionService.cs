@@ -1,7 +1,9 @@
 ﻿using InvestmentControl.ApplicationCore.DTOs.Responses;
+using InvestmentControl.Domain.Models;
 using InvestmentControl.Domain.Models.Entities;
 using InvestmentControl.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace InvestmentControl.ApplicationCore.Services;
 
@@ -11,16 +13,6 @@ public class PositionService
     public PositionService(BankDbContext bankDbContext)
     {
         _bankDbContext = bankDbContext ?? throw new ArgumentNullException(nameof(bankDbContext));
-    }
-
-    public async Task<ICollection<Position>> GetClientPositionsAsync(Guid userId)
-    {
-        var user = await _bankDbContext.Users
-            .Include(u => u.Positions)
-            .FirstOrDefaultAsync(u => u.Id == userId)
-            ?? throw new ArgumentException($"User with ID {userId} not found.");
-
-        return user.Positions;
     }
 
     public async Task<List<User>> GetTopClientsWithHighestPositionsValueAsync(int topCount = 10)
@@ -52,35 +44,116 @@ public class PositionService
         return clientsByValue.Select(x => x.User).ToList();
     }
 
-    public async Task<List<AssetAveragePrice>> GetAveragePricePerAssetForUserAsync(Guid userId)
+    public async Task<List<User>> GetTopClientsWhoPaidMostBrokerageAsync(int topCount = 10)
     {
-        var userPositions = await _bankDbContext.Positions
+        var topClientsWithBrokerage = await _bankDbContext.Operations
+            .GroupBy(op => op.UserId)
+            .Select(g => new
+            {
+                UserId = g.Key,
+                TotalBrokerage = g.Sum(op => op.Brokerage)
+            })
+            .OrderByDescending(x => x.TotalBrokerage)
+            .Take(topCount)
+            .ToListAsync();
+
+        var topClientIds = topClientsWithBrokerage.Select(x => x.UserId).ToList();
+
+        var topClients = await _bankDbContext.Users
+            .Where(u => topClientIds.Contains(u.Id))
+            .ToListAsync();
+
+        var orderedTopClients = topClients
+            .Join(topClientsWithBrokerage,
+                  user => user.Id,
+                  brokerageResult => brokerageResult.UserId,
+                  (user, brokerageResult) => new { User = user, brokerageResult.TotalBrokerage })
+            .OrderByDescending(x => x.TotalBrokerage)
+            .Select(x => x.User)
+            .ToList();
+
+        return orderedTopClients;
+    }
+
+    public async Task<Result> GetClientPositionsAsync(Guid userId)
+    {
+        var user = await _bankDbContext.Users
+            .Include(u => u.Positions)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user is null)
+        {
+            return Result.Failure(new ApiErrorResponse(HttpStatusCode.NotFound, $"User with ID {userId} not found."));
+        }
+
+        return Result.Success(user.Positions);
+    }
+
+    public async Task<Result> GetClientPositionInAssetAsync(Guid userId, string assetCode)
+    {
+        var user = await _bankDbContext.Users
+            .Include(u => u.Positions)
+                .ThenInclude(p => p.Asset)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user is null)
+        {
+            return Result.Failure(new ApiErrorResponse(HttpStatusCode.NotFound, $"User with ID {userId} not found."));
+        }
+
+        var position = user.Positions.FirstOrDefault(p => p.Asset.Code == assetCode);
+
+        if (position is null)
+        {
+            return Result.Failure(new ApiErrorResponse(HttpStatusCode.NotFound, $"No position found for asset code {assetCode} for user with ID {userId}."));
+        }
+
+        return Result.Success(position);
+    }
+
+    public async Task<Result> GetAveragePricePerAssetForUserAsync(Guid userId)
+    {
+        var userPositionsRaw = await _bankDbContext.Positions
             .Include(p => p.Asset)
             .Where(p => p.UserId == userId)
             .Select(p => new
             {
-                AssetId = p.AssetId,
-                AssetCode = p.Asset.Code,
-                AssetName = p.Asset.Name,
-                Quantity = p.Quantity,
-                MediumPrice = p.MediumPrice
+                p.AssetId,
+                p.Asset.Code,
+                p.Asset.Name,
+                p.Quantity,
+                p.MediumPrice
             })
             .ToListAsync();
 
-        if (userPositions.Count == 0)
+        if (userPositionsRaw is null || userPositionsRaw.Count == 0)
         {
-            return new List<AssetAveragePrice>();
+            return Result.Failure(new ApiErrorResponse(HttpStatusCode.NotFound, $"No positions found for user with ID {userId}."));
         }
 
-        var result = userPositions.Select(p => new AssetAveragePrice
-        {
-            AssetId = p.AssetId,
-            AssetCode = p.AssetCode,
-            AssetName = p.AssetName,
-            CurrentQuantity = p.Quantity,
-            AveragePrice = p.MediumPrice
-        }).ToList();
+        var assetAveragePrices = userPositionsRaw
+            .GroupBy(p => new { p.AssetId, p.Code, p.Name })
+            .Select(g =>
+            {
+                var totalQuantity = g.Sum(p => p.Quantity);
+                var totalWeightedCost = g.Sum(p => (decimal)p.Quantity * p.MediumPrice);
 
-        return result;
+                return new AssetAveragePrice
+                {
+                    AssetId = g.Key.AssetId,
+                    AssetCode = g.Key.Code,
+                    AssetName = g.Key.Name,
+                    CurrentQuantity = totalQuantity,
+                    AveragePrice = totalQuantity > 0 ? totalWeightedCost / totalQuantity : 0m
+                };
+            })
+            .ToList();
+
+        if (assetAveragePrices.Count == 0)
+        {
+            return Result.Failure(new ApiErrorResponse(HttpStatusCode.NotFound, $"No active positions found for user with ID {userId}."));
+        }
+
+        return Result.Success(assetAveragePrices);
     }
 }

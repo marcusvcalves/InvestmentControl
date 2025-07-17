@@ -24,14 +24,13 @@ public class AssetController : ControllerBase
     [HttpGet("{assetCode}/latest-quotation")]
     [ProducesResponseType(typeof(QuotationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-    public async Task<IResult> GetLatestQuotationByAssetCodeAsync([FromRoute] string assetCode)
+    public async Task<IActionResult> GetLatestQuotationByAssetCodeAsync([FromRoute] string assetCode)
     {
         var result = await _assetService.GetAssetLastQuotationByCodeAsync(assetCode);
 
-
-        return result.Match<QuotationResponse, IResult>(
-            onSuccess: quotation => Results.Ok(quotation),
-            onFailure: error => Results.NotFound(new { error.HttpStatusCode, error.Description })
+        return result.Match<QuotationResponse, IActionResult>(
+            onSuccess: Ok,
+            onFailure: NotFound
         );
     }
 }
