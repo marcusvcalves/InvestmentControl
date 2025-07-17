@@ -28,7 +28,7 @@ public class AssetService
                                      Id = q.Id,
                                      AssetId = q.AssetId,
                                      UnitPrice = q.UnitPrice,
-                                     CreatedAt = q.CreatedAt
+                                     Timestamp = q.CreatedAt
                                  })
                                  .FirstOrDefault()
             })
