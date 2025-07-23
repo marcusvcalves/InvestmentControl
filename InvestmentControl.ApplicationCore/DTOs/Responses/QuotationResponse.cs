@@ -7,5 +7,5 @@ public class QuotationResponse
     public Guid Id { get; set; }
     public Guid AssetId { get; set; }
     public decimal? UnitPrice { get; set; }
-    public Instant Timestamp { get; set; }
+    public Instant TimestampUtc { get; set; }
 }

@@ -1,50 +1,46 @@
 ﻿using InvestmentControl.ApplicationCore.DTOs.Responses;
 using InvestmentControl.Domain.Models;
+using InvestmentControl.Domain.Models.Abstractions.Repositories;
 using InvestmentControl.Infrastructure.Context;
-using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace InvestmentControl.ApplicationCore.Services;
 
 public class AssetService
 {
-    private readonly BankDbContext _bankDbContext;
-    public AssetService(BankDbContext bankDbContext)
+    private readonly IAssetRepository _assetRepository;
+    public AssetService(IAssetRepository assetRepository)
     {
-        _bankDbContext = bankDbContext ?? throw new ArgumentNullException(nameof(bankDbContext));
+        _assetRepository = assetRepository ?? throw new ArgumentNullException(nameof(assetRepository));
     }
 
     public async Task<Result> GetAssetLastQuotationByCodeAsync(string code)
     {
-        var asset = await _bankDbContext.Assets
-            .Where(a => a.Code == code)
-            .Select(a => new
-            {
-                Asset = a,
-                LastQuotation = a.Quotations
-                                 .OrderByDescending(q => q.CreatedAt)
-                                 .Select(q => new QuotationResponse
-                                 {
-                                     Id = q.Id,
-                                     AssetId = q.AssetId,
-                                     UnitPrice = q.UnitPrice,
-                                     Timestamp = q.CreatedAt
-                                 })
-                                 .FirstOrDefault()
-            })
-            .FirstOrDefaultAsync();
+        var asset = await _assetRepository.GetAssetByCode(code, includes: x => x.Quotations);
 
-        if (asset is null || asset.Asset is null)
+        if (asset is null)
         {
             return Result.Failure(new ApiErrorResponse(HttpStatusCode.NotFound, $"Asset with code {code} not found."));
         }
 
-        if (asset.LastQuotation is null)
+        var lastQuotation = asset.Quotations
+            .OrderByDescending(q => q.CreatedAt)
+            .FirstOrDefault();
+
+        if (lastQuotation is null)
         {
             return Result.Failure(new ApiErrorResponse(HttpStatusCode.NotFound, $"No quotations found for asset with code {code}."));
         }
 
+        var quotationResponse = new QuotationResponse
+        {
+            Id = lastQuotation.Id,
+            AssetId = lastQuotation.AssetId,
+            UnitPrice = lastQuotation.UnitPrice,
+            TimestampUtc = lastQuotation.CreatedAt
+        };
 
-        return Result.Success(asset.LastQuotation);
+
+        return Result.Success(quotationResponse);
     }
 }

@@ -1,5 +1,7 @@
 ﻿using InvestmentControl.ApplicationCore.Services;
+using InvestmentControl.Domain.Models.Abstractions.Repositories;
 using InvestmentControl.Infrastructure.Configurations.Context;
+using InvestmentControl.Infrastructure.Repositories;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
@@ -16,6 +18,11 @@ public static class ServicesConfigurations
         services.AddScoped<OperationService>();
         services.AddScoped<PositionService>();
         services.AddScoped<AssetService>();
+
+        services.AddScoped<IAssetRepository, AssetRepository>();
+        services.AddScoped<IOperationRepository, OperationRepository>();
+        services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
     }

@@ -1,4 +1,5 @@
-﻿using InvestmentControl.Domain.Models.Entities;
+﻿using InvestmentControl.Domain.Models.Abstractions.Repositories;
+using InvestmentControl.Domain.Models.Entities;
 using InvestmentControl.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,23 +7,24 @@ namespace InvestmentControl.ApplicationCore.Services;
 
 public class OperationService
 {
-    private readonly BankDbContext _bankDbContext;
-    public OperationService(BankDbContext bankDbContext)
+    private readonly IOperationRepository _operationRepository;
+    private readonly IUserRepository _userRepository;
+    public OperationService(IOperationRepository operationRepository, IUserRepository userRepository)
     {
-        _bankDbContext = bankDbContext ?? throw new ArgumentNullException(nameof(bankDbContext));
+        _operationRepository = operationRepository ?? throw new ArgumentNullException(nameof(operationRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
 
     public async Task<decimal> GetTotalBrokerageGainAsync()
     {
-        var totalBrokerage = await _bankDbContext.Operations
-                                        .SumAsync(op => op.Brokerage);
-
+        var totalBrokerage = await _operationRepository.GetQueryable().SumAsync(op => op.Brokerage);
+        
         return totalBrokerage;
     }
 
     public async Task<List<User>> GetTopClientsByBrokeragePaidAsync(int topCount = 10)
     {
-        var topClientsWithBrokerage = await _bankDbContext.Operations
+        var topClientsWithBrokerage = await _operationRepository.GetQueryable()
             .GroupBy(op => op.UserId)
             .Select(g => new
             {
@@ -35,7 +37,7 @@ public class OperationService
 
         var topClientIds = topClientsWithBrokerage.Select(x => x.UserId).ToList();
 
-        var topClients = await _bankDbContext.Users
+        var topClients = await _userRepository.GetQueryable()
             .Where(u => topClientIds.Contains(u.Id))
             .ToListAsync();
 

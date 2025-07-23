@@ -1,5 +1,6 @@
 ﻿using InvestmentControl.ApplicationCore.DTOs.Responses;
 using InvestmentControl.Domain.Models;
+using InvestmentControl.Domain.Models.Abstractions.Repositories;
 using InvestmentControl.Domain.Models.Entities;
 using InvestmentControl.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -9,15 +10,21 @@ namespace InvestmentControl.ApplicationCore.Services;
 
 public class PositionService
 {
-    private readonly BankDbContext _bankDbContext;
-    public PositionService(BankDbContext bankDbContext)
+    private readonly IUserRepository _userRepository;
+    private readonly IOperationRepository _operationRepository;
+    private readonly IPositionRepository _positionRepository;
+    public PositionService(IUserRepository userRepository,
+        IOperationRepository operationRepository,
+        IPositionRepository positionRepository)
     {
-        _bankDbContext = bankDbContext ?? throw new ArgumentNullException(nameof(bankDbContext));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _operationRepository = operationRepository ?? throw new ArgumentNullException(nameof(operationRepository));
+        _positionRepository = positionRepository ?? throw new ArgumentNullException(nameof(positionRepository));
     }
 
     public async Task<List<User>> GetTopClientsWithHighestPositionsValueAsync(int topCount = 10)
     {
-        var clientsWithPositions = await _bankDbContext.Users
+        var clientsWithPositions = await _userRepository.GetQueryable()
             .Include(u => u.Positions)
                 .ThenInclude(p => p.Asset)
                     .ThenInclude(a => a.Quotations)
@@ -46,7 +53,7 @@ public class PositionService
 
     public async Task<List<User>> GetTopClientsWhoPaidMostBrokerageAsync(int topCount = 10)
     {
-        var topClientsWithBrokerage = await _bankDbContext.Operations
+        var topClientsWithBrokerage = await _operationRepository.GetQueryable()
             .GroupBy(op => op.UserId)
             .Select(g => new
             {
@@ -59,7 +66,7 @@ public class PositionService
 
         var topClientIds = topClientsWithBrokerage.Select(x => x.UserId).ToList();
 
-        var topClients = await _bankDbContext.Users
+        var topClients = await _userRepository.GetQueryable()
             .Where(u => topClientIds.Contains(u.Id))
             .ToListAsync();
 
@@ -77,7 +84,7 @@ public class PositionService
 
     public async Task<Result> GetClientPositionsAsync(Guid userId)
     {
-        var user = await _bankDbContext.Users
+        var user = await _userRepository.GetQueryable()
             .Include(u => u.Positions)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
@@ -91,7 +98,7 @@ public class PositionService
 
     public async Task<Result> GetClientPositionInAssetAsync(Guid userId, string assetCode)
     {
-        var user = await _bankDbContext.Users
+        var user = await _userRepository.GetQueryable()
             .Include(u => u.Positions)
                 .ThenInclude(p => p.Asset)
             .FirstOrDefaultAsync(u => u.Id == userId);
@@ -113,7 +120,7 @@ public class PositionService
 
     public async Task<Result> GetAveragePricePerAssetForUserAsync(Guid userId)
     {
-        var userPositionsRaw = await _bankDbContext.Positions
+        var userPositionsRaw = await _positionRepository.GetQueryable()
             .Include(p => p.Asset)
             .Where(p => p.UserId == userId)
             .Select(p => new
