@@ -22,7 +22,7 @@ public class UserRepository : IUserRepository
         return _bankDbContext.Users.AsQueryable();
     }
 
-    public async Task AddAsync(User user, bool saveChangesAsync)
+    public async Task<User> AddAsync(User user, bool saveChangesAsync)
     {
         ArgumentNullException.ThrowIfNull(user);
 
@@ -32,5 +32,7 @@ public class UserRepository : IUserRepository
         {
             await _bankDbContext.SaveChangesAsync();
         }
+
+        return user;
     }
 }

@@ -28,4 +28,15 @@ public class User : BaseEntity
             BrokeragePercentage = brokeragePercentage
         };
     }
+
+    public static User Create(string name, string email, decimal brokeragePercentage)
+    {
+        return new User
+        {
+            Id = new Guid(),
+            Name = name,
+            Email = email,
+            BrokeragePercentage = brokeragePercentage
+        };
+    }
 }

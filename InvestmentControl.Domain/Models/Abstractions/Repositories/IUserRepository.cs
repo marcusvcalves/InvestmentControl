@@ -6,5 +6,5 @@ public interface IUserRepository
 {
     Task<User?> GetByIdAsync(Guid id);
     IQueryable<User> GetQueryable();
-    Task AddAsync(User user, bool saveChangesAsync);
+    Task<User> AddAsync(User user, bool saveChangesAsync);
 }
