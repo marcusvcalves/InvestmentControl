@@ -1,11 +1,13 @@
 ﻿using InvestmentControl.Domain.Models.Entities.Base;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InvestmentControl.Domain.Models.Entities;
 
 public class Asset : BaseEntity
 {
     [Required]
+    [Column(TypeName = "citext")]
     public required string Code { get; set; }
 
     [Required]

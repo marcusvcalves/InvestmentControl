@@ -1,11 +1,10 @@
 using InvestmentControl.ApplicationCore.Configurations;
+using InvestmentControl.ApplicationCore.Middlewares;
 using InvestmentControl.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
-using NodaTime.Serialization.SystemTextJson;
 using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using InvestmentControl.ApplicationCore.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 

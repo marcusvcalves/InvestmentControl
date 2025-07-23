@@ -24,6 +24,8 @@ public partial class BankDbContext : DbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BankDbContext).Assembly);
 
+        modelBuilder.HasPostgresExtension("citext");
+
         base.OnModelCreating(modelBuilder);
     }
 }

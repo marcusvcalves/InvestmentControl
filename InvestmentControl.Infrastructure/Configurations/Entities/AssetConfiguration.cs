@@ -21,8 +21,11 @@ public class AssetConfiguration : IEntityTypeConfiguration<Asset>
                .HasColumnName("id");
 
         builder.Property(e => e.Code)
-               .HasMaxLength(10)
-               .HasColumnName("code");
+            .IsRequired()
+            .HasMaxLength(10)
+            .HasColumnType("citext")
+            .HasColumnName("code");
+
 
         builder.Property(e => e.Name)
                .HasMaxLength(50)
