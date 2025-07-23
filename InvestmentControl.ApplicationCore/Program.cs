@@ -1,6 +1,7 @@
 using InvestmentControl.ApplicationCore.Configurations;
 using InvestmentControl.ApplicationCore.Middlewares;
 using InvestmentControl.Infrastructure.Context;
+using InvestmentControl.Infrastructure.SeedData;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
@@ -32,10 +33,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseCors(ServicesConfigurations.CorsAllowAll);
 
-    using (var scope = app.Services.CreateScope())
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    try
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<BankDbContext>();
-        dbContext.Database.Migrate();
+        var bankDbContext = services.GetRequiredService<BankDbContext>();
+        bankDbContext.Database.Migrate();
+
+        var databaseSeeder = services.GetRequiredService<DatabaseSeeder>();
+        await databaseSeeder.SeedAsync();
+
+        app.Logger.LogInformation("Database seeded successfully in Development environment.");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "An error occurred while migrating or seeding the database in Development environment.");
     }
 }
 

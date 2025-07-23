@@ -17,4 +17,15 @@ public class User : BaseEntity
     public virtual ICollection<Operation> Operations { get; set; } = new List<Operation>();
 
     public virtual ICollection<Position> Positions { get; set; } = new List<Position>();
+
+    public static User Create(Guid guid, string name, string email, decimal brokeragePercentage)
+    {
+        return new User
+        {
+            Id = guid,
+            Name = name,
+            Email = email,
+            BrokeragePercentage = brokeragePercentage
+        };
+    }
 }

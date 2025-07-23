@@ -13,7 +13,7 @@ public class AssetRepository : IAssetRepository
         _bankDbContext = bankDbContext ?? throw new ArgumentNullException(nameof(bankDbContext));
     }
 
-    public async Task<Asset?> GetAssetByCode(string code, params Expression<Func<Asset, object>>[] includes)
+    public async Task<Asset?> GetAssetByCodeAsync(string code, params Expression<Func<Asset, object>>[] includes)
     {
         IQueryable<Asset> query = _bankDbContext.Assets;
 

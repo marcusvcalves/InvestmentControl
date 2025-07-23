@@ -1,7 +1,6 @@
 ﻿using InvestmentControl.ApplicationCore.DTOs.Responses;
 using InvestmentControl.Domain.Models;
 using InvestmentControl.Domain.Models.Abstractions.Repositories;
-using InvestmentControl.Infrastructure.Context;
 using System.Net;
 
 namespace InvestmentControl.ApplicationCore.Services;
@@ -16,7 +15,7 @@ public class AssetService
 
     public async Task<Result> GetAssetLastQuotationByCodeAsync(string code)
     {
-        var asset = await _assetRepository.GetAssetByCode(code, includes: x => x.Quotations);
+        var asset = await _assetRepository.GetAssetByCodeAsync(code, includes: x => x.Quotations);
 
         if (asset is null)
         {

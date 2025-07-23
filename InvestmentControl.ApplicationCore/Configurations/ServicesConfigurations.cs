@@ -2,6 +2,7 @@
 using InvestmentControl.Domain.Models.Abstractions.Repositories;
 using InvestmentControl.Infrastructure.Configurations.Context;
 using InvestmentControl.Infrastructure.Repositories;
+using InvestmentControl.Infrastructure.SeedData;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
@@ -23,6 +24,8 @@ public static class ServicesConfigurations
         services.AddScoped<IOperationRepository, OperationRepository>();
         services.AddScoped<IPositionRepository, PositionRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+
+        services.AddScoped<DatabaseSeeder>();
 
         return services;
     }

@@ -2,7 +2,6 @@
 using InvestmentControl.Domain.Models;
 using InvestmentControl.Domain.Models.Abstractions.Repositories;
 using InvestmentControl.Domain.Models.Entities;
-using InvestmentControl.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 

@@ -1,6 +1,5 @@
 ﻿using InvestmentControl.Domain.Models.Abstractions.Repositories;
 using InvestmentControl.Domain.Models.Entities;
-using InvestmentControl.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvestmentControl.ApplicationCore.Services;
@@ -18,7 +17,7 @@ public class OperationService
     public async Task<decimal> GetTotalBrokerageGainAsync()
     {
         var totalBrokerage = await _operationRepository.GetQueryable().SumAsync(op => op.Brokerage);
-        
+
         return totalBrokerage;
     }
 
