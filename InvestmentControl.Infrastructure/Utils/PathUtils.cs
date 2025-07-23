@@ -1,4 +1,4 @@
-﻿namespace InvestmentControl.ApplicationCore.Utils;
+﻿namespace InvestmentControl.Infrastructure.Utils;
 
 public static class PathUtils
 {

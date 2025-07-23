@@ -1,4 +1,4 @@
-﻿using InvestmentControl.ApplicationCore.Utils;
+﻿using InvestmentControl.Infrastructure.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
