@@ -33,7 +33,7 @@ public class User : BaseEntity
     {
         return new User
         {
-            Id = new Guid(),
+            Id = Guid.NewGuid(),
             Name = name,
             Email = email,
             BrokeragePercentage = brokeragePercentage
