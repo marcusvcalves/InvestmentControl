@@ -33,7 +33,7 @@ public class AssetPriceProducerService : BackgroundService
 
                 var content = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken);
 
-                var assetsResponse = JsonSerializer.Deserialize<List<AssetResponse>>(
+                var assetsResponse = JsonSerializer.Deserialize<List<AssetIntegationResponse>>(
                     content,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 

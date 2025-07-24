@@ -44,7 +44,7 @@ public class QuotationIntegrationService : BackgroundService
 
                 try
                 {
-                     var quotationData = JsonSerializer.Deserialize<AssetResponse>(consumeResult.Message.Value);
+                     var quotationData = JsonSerializer.Deserialize<AssetIntegationResponse>(consumeResult.Message.Value);
 
                     if (quotationData is null)
                     {

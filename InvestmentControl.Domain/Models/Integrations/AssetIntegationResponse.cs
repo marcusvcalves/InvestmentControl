@@ -1,6 +1,6 @@
 ﻿namespace InvestmentControl.Domain.Models.Integrations;
 
-public class AssetResponse
+public class AssetIntegationResponse
 {
     public decimal? Price { get; set; }
     public double? PriceOpen { get; set; }
